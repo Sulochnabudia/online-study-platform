@@ -1,0 +1,720 @@
+# No web server version 
+ServerSignature Off
+
+#disable Directory Indexing
+Options -Indexes
+
+# Strict Policy Header impletment
+Header set Strict-Transport-Security "max-age=31536000" env=HTTPS
+Header append X-FRAME-OPTIONS "SAMEORIGIN"
+
+<IfModule mod_headers.c>
+    # Protect against XSS attacks
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+<IfModule mod_headers.c>
+# Protect host header injection 
+Header unset X-Forwarded-Host
+</IfModule>
+
+
+# X-Content-Type nosniff
+<IfModule mod_headers.c>
+	Header set X-Content-Type-Options nosniff
+</IfModule>
+
+ReWriteEngine On
+
+# Block suspicious request methods
+RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+# Block suspicious user agents and requests
+RewriteCond %{HTTP_USER_AGENT} (libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader) [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (<|>|'|%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (;|<|>|'|"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner) [NC,OR]
+RewriteCond %{THE_REQUEST} \?\ HTTP/ [NC,OR]
+RewriteCond %{THE_REQUEST} \/\*\ HTTP/ [NC,OR]
+RewriteCond %{THE_REQUEST} etc/passwd [NC,OR]
+RewriteCond %{THE_REQUEST} cgi-bin [NC,OR]
+RewriteCond %{THE_REQUEST} (%0A|%0D) [NC,OR]
+
+# Block MySQL injections, RFI, base64, etc.
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=http:// [OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=http%3A%2F%2F [OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=(\.\.//?)+ [OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=/([a-z0-9_.]//?)+ [NC,OR]
+RewriteCond %{QUERY_STRING} \=PHP[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12} [NC,OR]
+RewriteCond %{QUERY_STRING} (\.\./|\.\.) [OR]
+RewriteCond %{QUERY_STRING} ftp\: [NC,OR]
+RewriteCond %{QUERY_STRING} http\: [NC,OR]
+RewriteCond %{QUERY_STRING} https\: [NC,OR]
+RewriteCond %{QUERY_STRING} \=\|w\| [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)/self/(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)cPath=http://(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*iframe.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^i]*i)+frame.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [NC,OR]
+RewriteCond %{QUERY_STRING} base64_(en|de)code[^(]*\([^)]*\) [NC,OR]
+RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} ^.*(\[|\]|\(|\)|<|>).* [NC,OR]
+RewriteCond %{QUERY_STRING} (NULL|OUTFILE|LOAD_FILE) [OR]
+RewriteCond %{QUERY_STRING} (\./|\../|\.../)+(motd|etc|bin) [NC,OR]
+RewriteCond %{QUERY_STRING} (localhost|loopback|127\.0\.0\.1) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|>|'|%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{QUERY_STRING} concat[^\(]*\( [NC,OR]
+RewriteCond %{QUERY_STRING} union([^s]*s)+elect [NC,OR]
+RewriteCond %{QUERY_STRING} union([^a]*a)+ll([^s]*s)+elect [NC,OR]
+RewriteCond %{QUERY_STRING} (;|<|>|'|"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|drop|delete|update|cast|create|char|convert|alter|declare|order|script|set|md5|benchmark|encode) [NC,OR]
+
+# PHP-CGI Vulnerability
+RewriteCond %{QUERY_STRING} ^(%2d|\-)[^=]+$ [NC,OR]
+
+#proc/self/environ? no way!
+RewriteCond %{QUERY_STRING} proc\/self\/environ [NC,OR]
+
+RewriteCond %{QUERY_STRING} (sp_executesql) [NC]
+RewriteRule ^(.*)$ - [F,L]
+
+
+RewriteRule ^verify_resend.html account_otp_resend.php [NC,L] 
+
+RewriteRule ^verify.html account_verify.php [NC,L] 
+
+RewriteRule ^verify_valid.html account_verify_valid.php [NC,L] 
+
+RewriteRule ^CONFIG config.php [NC,L] 
+
+RewriteRule ^faculty_register.html faculty_signup.php [NC,L] 
+
+RewriteRule ^faculty_register_valid.html faculty_signup_valid.php [NC,L] 
+
+RewriteRule ^password_reset.html forgot_password.php [NC,L] 
+
+RewriteRule ^password_reset_valid.html forgot_password_valid.php [NC,L] 
+
+RewriteRule ^register_step1.html join.php [NC,L] 
+
+RewriteRule ^register_step2.html join_signup.php [NC,L] 
+
+RewriteRule ^register_step1_valid.html join_valid.php [NC,L] 
+
+RewriteRule ^login.html login.php [NC,L]
+
+RewriteRule ^login1.html login_valid.php [NC,L]
+
+RewriteRule ^LOGO logo.php [NC,L] 
+
+RewriteRule ^otp_resend.html otp_resend.php [NC,L] 
+
+RewriteRule ^otp_verify.html otp_verify.php [NC,L] 
+
+RewriteRule ^otp_verify_valid.html otp_verify_valid.php [NC,L] 
+
+RewriteRule ^school_register.html school_signup.php [NC,L] 
+
+RewriteRule ^school_register_valid.html school_signup_valid.php [NC,L] 
+
+RewriteRule ^new_password.html set_new_password.php [NC,L] 
+
+RewriteRule ^new_password_valid.html set_new_password_valid.php [NC,L] 
+
+RewriteRule ^register.html sign_up.php [NC,L] 
+
+RewriteRule ^register_valid.html sign_up_valid.php [NC,L] 
+
+RewriteRule ^student_register.html student_signup.php [NC,L] 
+
+RewriteRule ^student_register_valid.html student_signup_valid.php [NC,L] 
+
+
+
+
+
+
+
+
+
+RewriteRule ^user/goback.html user/back.php [NC,L]
+
+RewriteRule ^user/buypackage.html user/checkout.php [NC,L]
+
+RewriteRule ^user/home.html user/dashboard.php [NC,L]
+
+RewriteRule ^user/student_doubt.html user/doubt.php [NC,L]
+
+RewriteRule ^user/student_solution.html user/doubt_solution.php [NC,L]
+
+RewriteRule ^user/student_doubt_valid.html user/doubt_valid.php [NC,L]
+
+RewriteRule ^user/package_invoice.html user/invoice.php [NC,L]
+
+RewriteRule ^user/mark.html user/marked.php [NC,L]
+
+RewriteRule ^user/doubt.html user/my_doubt.php [NC,L]
+
+RewriteRule ^user/package.html user/my_package.php [NC,L]
+
+RewriteRule ^user/all_test.html user/my_test.php [NC,L]
+
+RewriteRule ^user/question.html user/myquestion.php [NC,L]
+
+RewriteRule ^user/package_detail.html user/package_details.php [NC,L]
+
+RewriteRule ^user/payment_failed.html user/pay_failed.php [NC,L]
+
+RewriteRule ^user/pay_with_wallet.html user/pay_wallet.php [NC,L]
+
+RewriteRule ^user/view_video.html user/play_video.php [NC,L]
+
+RewriteRule ^user/save_question.html user/question_submit.php [NC,L]
+
+RewriteRule ^user/test_report.html user/report.php [NC,L]
+
+RewriteRule ^user/report_view_1.html user/report_1.php [NC,L]
+
+RewriteRule ^user/question_report.html user/report_2.php [NC,L]
+
+RewriteRule ^user/question_reset.html user/reset.php [NC,L]
+
+RewriteRule ^user/instruction.html user/test_instruction.php [NC,L]
+
+RewriteRule ^user/instruction_valid.html user/test_instruction_valid.php [NC,L]
+
+RewriteRule ^user/test_submit.html user/test_submit_valid_2.php [NC,L]
+
+RewriteRule ^user/test_valid.html user/test_valid.php [NC,L]
+
+RewriteRule ^user/video.html user/video_lecture.php [NC,L]
+
+RewriteRule ^user/video_valid.html user/video_lecture_valid.php [NC,L]
+
+RewriteRule ^user/read_notes.html user/view_notes.php [NC,L]
+
+RewriteRule ^user/notes.html user/notes.php [NC,L]
+
+RewriteRule ^user/wallet.html user/wallet.php [NC,L]
+
+RewriteRule ^user/profile.html user/my_profile.php [NC,L]
+
+RewriteRule ^user/logout.html user/logout.php [NC,L]
+
+RewriteRule ^user/online_test.html user/test.php [NC,L]
+
+RewriteRule ^user/play_demo_video.html user/demo_video.php [NC,L]
+
+RewriteRule ^user/test_redirect.html user/test_submit_valid_2.php [NC,L]
+
+RewriteRule ^user/paper.html user/question_paper.php [NC,L]
+
+RewriteRule ^user/view_paper.html user/view_question_paper.php [NC,L]
+
+RewriteRule ^user/answer.html user/paper_answer.php [NC,L]
+
+RewriteRule ^user/answer_valid.html user/paper_answer_valid.php [NC,L]
+
+RewriteRule ^user/inbox.html user/notification.php [NC,L]
+
+RewriteRule ^user/att_detail.html user/att_detail.php [NC,L]
+
+RewriteRule ^user/application.html user/application.php [NC,L]
+
+RewriteRule ^user/application_valid.html user/application_valid.php [NC,L]
+
+RewriteRule ^user/form.html user/form.php [NC,L]
+
+RewriteRule ^user/form_valid.html user/form_valid.php [NC,L]
+
+RewriteRule ^user/update_profile.html user/update_profile.php [NC,L]
+
+RewriteRule ^user/test_summary.html user/test_analysis.php [NC,L]
+
+
+
+
+
+
+
+RewriteRule ^faculty/home.html faculty/dashboard.php [NC,L]
+
+RewriteRule ^faculty/package_add_valid.html faculty/add_new_package_valid.php [NC,L]
+
+RewriteRule ^faculty/test_add_valid.html faculty/add_new_test_valid.php [NC,L]
+
+RewriteRule ^faculty/notes_add.html faculty/add_notes.php [NC,L]
+
+RewriteRule ^faculty/notes_valid.html faculty/add_notes_valid.php [NC,L]
+
+RewriteRule ^faculty/question_add.html faculty/add_question.php [NC,L]
+
+RewriteRule ^faculty/question_add2.html faculty/add_question_2.php [NC,L]
+
+RewriteRule ^faculty/question_valid.html faculty/add_question_valid.php [NC,L]
+
+RewriteRule ^faculty/question_add2_valid.html faculty/add_question_valid_2.php [NC,L]
+
+RewriteRule ^faculty/test_add.html faculty/add_test.php [NC,L]
+
+RewriteRule ^faculty/video_add.html faculty/add_video.php [NC,L]
+
+RewriteRule ^faculty/video_add_valid.html faculty/add_video_valid.php [NC,L]
+
+RewriteRule ^faculty/buyplan.html faculty/checkout.php [NC,L]
+
+RewriteRule ^faculty/notes_delete.html faculty/delete_notes.php [NC,L]
+
+RewriteRule ^faculty/question_delete.html faculty/delete_question.php [NC,L]
+
+RewriteRule ^faculty/doubt_valid.html faculty/doubt_valid.php [NC,L]
+
+RewriteRule ^faculty/index.html faculty/index.php [NC,L]
+
+RewriteRule ^faculty/school_invoice.html faculty/invoice.php [NC,L]
+
+RewriteRule ^faculty/logout.html faculty/logout.php [NC,L]
+
+RewriteRule ^faculty/transfer_money.html faculty/money_transfer.php [NC,L]
+
+RewriteRule ^faculty/notes.html faculty/my_notes.php [NC,L]
+
+RewriteRule ^faculty/profile.html faculty/my_profile.php [NC,L]
+
+RewriteRule ^faculty/question.html faculty/my_question.php [NC,L]
+
+RewriteRule ^faculty/test.html faculty/my_test.php [NC,L]
+
+RewriteRule ^faculty/video.html faculty/my_video.php [NC,L]
+
+RewriteRule ^faculty/package.html faculty/my_package.php [NC,L]
+
+RewriteRule ^faculty/packages.html faculty/package.php [NC,L]
+
+RewriteRule ^faculty/package_details.html faculty/package_detail.php [NC,L]
+
+RewriteRule ^faculty/pack_status_update.html faculty/package_status_update.php [NC,L]
+
+RewriteRule ^faculty/pack_update_valid.html faculty/package_update_valid.php [NC,L]
+
+RewriteRule ^faculty/payment_failed.html faculty/pay_failed.php [NC,L]
+
+RewriteRule ^faculty/payment_mode_valid.html faculty/pay_mode_valid.php [NC,L]
+
+RewriteRule ^faculty/wallet_pay.html faculty/pay_wallet.php [NC,L]
+
+RewriteRule ^faculty/pay_mode.html faculty/payment_mode.php [NC,L]
+
+RewriteRule ^faculty/view_video.html faculty/play_video.php [NC,L]
+
+RewriteRule ^faculty/question_mode.html faculty/question_type.php [NC,L]
+
+RewriteRule ^faculty/report_active.html faculty/report_generate.php [NC,L]
+
+RewriteRule ^faculty/add_soluton.html faculty/solution.php [NC,L]
+
+RewriteRule ^faculty/student_list.html faculty/student.php [NC,L]
+
+RewriteRule ^faculty/student_doubt.html faculty/student_doubt.php [NC,L]
+
+RewriteRule ^faculty/student_status.html faculty/student_status.php [NC,L]
+
+RewriteRule ^faculty/test_status.html faculty/test.php [NC,L]
+
+RewriteRule ^faculty/test_all_detail.html faculty/test_detail.php [NC,L]
+
+RewriteRule ^faculty/test_update_status.html faculty/test_status_update.php [NC,L]
+
+RewriteRule ^faculty/transaction_details.html faculty/transaction_detail.php [NC,L]
+
+RewriteRule ^faculty/package_update.html faculty/update_package.php [NC,L]
+
+RewriteRule ^faculty/test_update.html faculty/update_test.php [NC,L]
+
+RewriteRule ^faculty/test_update_valid.html faculty/update_test_valid.php [NC,L]
+
+RewriteRule ^faculty/delete_video.html faculty/video_delete.php [NC,L]
+
+RewriteRule ^faculty/doubt_view.html faculty/view_doubt.php [NC,L]
+
+RewriteRule ^faculty/notes_view.html faculty/view_notes.php [NC,L]
+
+RewriteRule ^faculty/question_view.html faculty/view_question.php [NC,L]
+
+RewriteRule ^faculty/faculty_wallet.html faculty/wallet.php [NC,L]
+
+RewriteRule ^faculty/new_package.html faculty/new_package.php [NC,L]
+
+RewriteRule ^faculty/test_attempt_list.html faculty/student_test_attempt_list.php [NC,L] 
+
+RewriteRule ^faculty/faculty_data_update.html faculty/package_data_update.php [NC,L]
+
+RewriteRule ^faculty/student_delete.html faculty/delete_student.php [NC,L]
+
+RewriteRule ^faculty/student_class_update.html faculty/student_class_update.php [NC,L]
+
+RewriteRule ^faculty/school_advt.html faculty/school_advt.php [NC,L]
+
+RewriteRule ^faculty/add_new_img.html faculty/add_new_image.php [NC,L]
+
+RewriteRule ^faculty/add_image_valid.html faculty/add_image_valid.php [NC,L]
+
+RewriteRule ^faculty/image_delete.html faculty/delete_image.php [NC,L]
+
+RewriteRule ^faculty/attendance.html faculty/add_attendance.php [NC,L]
+
+RewriteRule ^faculty/attendance2.html faculty/attendance_2.php [NC,L]
+
+RewriteRule ^faculty/attendance_valid.html faculty/attendance_valid.php [NC,L]
+
+
+RewriteRule ^faculty/attendance_detail.html faculty/attendance_details.php [NC,L]
+
+RewriteRule ^faculty/course.html faculty/select_course.php [NC,L]
+
+RewriteRule ^faculty/fees.html faculty/fees_details.php [NC,L]
+
+RewriteRule ^faculty/fee_deposit.html faculty/fees_deposit.php [NC,L]
+
+RewriteRule ^faculty/fee_due.html faculty/due_fees.php [NC,L]
+
+RewriteRule ^faculty/fees_valid.html faculty/fee_valid.php [NC,L]
+
+RewriteRule ^faculty/question_paper.html faculty/question_paper.php [NC,L]
+
+RewriteRule ^faculty/add_question_paper.html faculty/add_question_paper.php [NC,L]
+
+RewriteRule ^faculty/question_paper_valid.html faculty/question_paper_valid.php [NC,L]
+
+RewriteRule ^faculty/view_question_paper.html faculty/view_question_paper.php [NC,L]
+
+RewriteRule ^faculty/question_paper_status.html faculty/question_paper_status.php [NC,L]
+
+RewriteRule ^faculty/view_student_answer.html faculty/view_student_answer.php [NC,L]
+
+RewriteRule ^faculty/student_answer.html faculty/student_answer.php [NC,L]
+
+RewriteRule ^faculty/appli_date.html faculty/select_application_date.php [NC,L]
+
+RewriteRule ^faculty/student_appli.html faculty/student_application.php [NC,L]
+
+RewriteRule ^faculty/application_status.html faculty/application_status.php [NC,L]
+
+RewriteRule ^faculty/notification.html faculty/notification.php [NC,L]
+
+RewriteRule ^faculty/notification_status.html faculty/notification_status.php [NC,L]
+
+RewriteRule ^faculty/view_notification.html faculty/view_notification.php [NC,L]
+
+RewriteRule ^faculty/add_notification.html faculty/add_notification.php [NC,L]
+
+RewriteRule ^faculty/notification_valid.html faculty/notification_valid.php [NC,L]
+
+RewriteRule ^faculty/lock.html faculty/lock.php [NC,L]
+
+RewriteRule ^faculty/join_sms.html faculty/join_sms.php [NC,L]
+
+RewriteRule ^faculty/send_sms.html faculty/send_sms.php [NC,L]
+
+RewriteRule ^faculty/sms_send_valid.html faculty/sms_send_valid.php [NC,L]
+
+RewriteRule ^faculty/form_details.html faculty/form_detail.php [NC,L]
+
+RewriteRule ^faculty/create_form_step1.html faculty/create_form_step1.php [NC,L]
+
+RewriteRule ^faculty/form_step1_valid.html faculty/form_step1_valid.php [NC,L]
+
+RewriteRule ^faculty/form_status.html faculty/form_status.php [NC,L]
+
+RewriteRule ^faculty/add_field.html faculty/add_field.php [NC,L]
+
+RewriteRule ^faculty/add_field_valid.html faculty/add_field_valid.php [NC,L]
+
+RewriteRule ^faculty/view_field.html faculty/view_field.php [NC,L]
+
+RewriteRule ^faculty/field_delete.html faculty/field_delete.php [NC,L]
+
+RewriteRule ^faculty/student_form_data_2.html faculty/student_form_data_2.php [NC,L]
+
+RewriteRule ^faculty/student_form_data.html faculty/student_form_data.php [NC,L]
+
+RewriteRule ^faculty/reject_form_data.html faculty/reject_form_data.php [NC,L]
+
+RewriteRule ^faculty/add_new_video.html faculty/add_new_video.php [NC,L]
+
+RewriteRule ^faculty/add_new_video_valid.html faculty/add_new_video_valid.php [NC,L]
+
+RewriteRule ^faculty/advt_video_play.html faculty/advt_video_play.php [NC,L]
+
+RewriteRule ^faculty/sms_history.html faculty/sms_history.php [NC,L]
+
+RewriteRule ^faculty/video_type.html faculty/video_type.php [NC,L]
+
+RewriteRule ^faculty/add_youtube_video.html faculty/add_youtube_video.php [NC,L]
+
+RewriteRule ^faculty/add_youtube_video_valid.html faculty/add_youtube_video_valid.php [NC,L]
+
+RewriteRule ^faculty/profile_update_request.html faculty/profile_update_request.php [NC,L]
+
+
+RewriteRule ^faculty/admitcard_step_1.html faculty/admit_card_course.php [NC,L]
+
+RewriteRule ^faculty/admitcard.html faculty/admit_card.php [NC,L]
+
+RewriteRule ^faculty/create_admit_card.html faculty/add_admit_card.php [NC,L]
+
+RewriteRule ^faculty/add_admit_card_valid.html faculty/add_admit_card_validation.php [NC,L]
+
+RewriteRule ^faculty/subject_time_table.html faculty/subject_time_table.php [NC,L]
+
+RewriteRule ^faculty/check.html faculty/checkout_1.php [NC,L]
+
+RewriteRule ^scolar/admin/profile.html scolar/admin/my_profile.php [NC,L]
+
+
+
+
+
+
+
+
+
+RewriteRule ^scolar/login.html scolar/login.php [NC,L]
+
+RewriteRule ^scolar/register.html scolar/register.php [NC,L]
+
+RewriteRule ^scolar/forgot_password.html scolar/forgot_password.php [NC,L]
+
+RewriteRule ^scolar/forgot_password_valid.html scolar/forgot_password_valid.php [NC,L]
+
+RewriteRule ^scolar/forgot_otp_resend.html scolar/forgot_otp_resend.php [NC,L]
+
+RewriteRule ^scolar/otp_resend.html scolar/otp_resend.php [NC,L]
+
+RewriteRule ^scolar/password_reset.html scolar/password_reset.php [NC,L]
+
+RewriteRule ^scolar/password_reset_valid.html scolar/password_reset_valid.php [NC,L]
+
+RewriteRule ^scolar/otp_verify.html scolar/otp_verify.php [NC,L]
+
+RewriteRule ^scolar/otp_verify_valid.html scolar/otp_verify_valid.php [NC,L]
+
+RewriteRule ^scolar/login_valid.html scolar/login_valid.php [NC,L]
+
+RewriteRule ^scolar/register_valid.html scolar/register_valid.php [NC,L]
+
+RewriteRule ^scolar/register_verify.html scolar/register_verify.php [NC,L]
+
+RewriteRule ^scolar/register_verify_valid.html scolar/register_verify_valid.php [NC,L] 
+
+RewriteRule ^scolar/otp_resend.html scolar/otp_resend.php [NC,L]
+
+RewriteRule ^scolar/home.html scolar/home.php [NC,L]
+
+RewriteRule ^scolar/form.html scolar/exam_form.php [NC,L]
+
+RewriteRule ^scolar/form_valid.html scolar/form_valid.php [NC,L]
+
+RewriteRule ^scolar/view_form.html scolar/form_status.php [NC,L]
+
+RewriteRule ^scolar/applicant_form.html scolar/applicant_form.php [NC,L]
+
+RewriteRule ^scolar/logout.html scolar/logout.php [NC,L]
+
+RewriteRule ^scolar/notification.html scolar/notification.php [NC,L]
+
+RewriteRule ^scolar/pay.html scolar/checkout.php [NC,L]
+
+RewriteRule ^scolar/edit_form.html scolar/edit_form.php [NC,L]
+
+RewriteRule ^scolar/edit_form_valid.html scolar/edit_form_valid.php [NC,L]
+
+
+RewriteRule ^scolar/admin/index.html scolar/admin/index.php [NC,L]
+
+RewriteRule ^scolar/admin/login.html scolar/admin/login_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/home.html scolar/admin/dashboard.php [NC,L] 
+
+RewriteRule ^scolar/admin/home.html scolar/admin/dashboard.php [NC,L]
+
+
+RewriteRule ^scolar/admin/package_add_valid.html scolar/admin/add_new_package_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/delete_package.html scolar/admin/delete_package.php [NC,L]
+
+RewriteRule ^scolar/admin/test_add_valid.html scolar/admin/add_new_test_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/question_add.html scolar/admin/add_question.php [NC,L]
+
+RewriteRule ^scolar/admin/question_add2.html scolar/admin/add_question_2.php [NC,L]
+
+RewriteRule ^scolar/admin/question_valid.html scolar/admin/add_question_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/question_add2_valid.html scolar/admin/add_question_valid_2.php [NC,L]
+
+RewriteRule ^scolar/admin/test_add.html scolar/admin/add_test.php [NC,L]
+
+RewriteRule ^scolar/admin/question_delete.html scolar/admin/delete_question.php [NC,L]
+
+RewriteRule ^scolar/admin/student_delete.html scolar/admin/delete_student.php [NC,L]
+
+RewriteRule ^scolar/admin/lock.html scolar/admin/lock.php [NC,L]
+
+RewriteRule ^scolar/admin/logout.html scolar/admin/logout.php [NC,L]
+
+RewriteRule ^scolar/admin/question.html scolar/admin/my_question.php [NC,L]
+
+RewriteRule ^scolar/admin/test.html scolar/admin/my_test.php [NC,L]
+
+RewriteRule ^scolar/admin/package_add_valid.html scolar/admin/add_new_package_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/packages.html scolar/admin/package.php [NC,L]
+
+RewriteRule ^scolar/admin/faculty_data_update.html scolar/admin/package_data_update.php [NC,L]
+
+RewriteRule ^scolar/admin/package_details.html scolar/admin/package_detail.php [NC,L]
+
+RewriteRule ^scolar/admin/pack_status_update.html scolar/admin/package_status_update.php [NC,L]
+
+RewriteRule ^scolar/admin/pack_update_valid.html scolar/admin/package_update_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/question_mode.html scolar/admin/question_type.php [NC,L]
+
+RewriteRule ^scolar/admin/report_active.html scolar/admin/report_generate.php [NC,L]
+
+RewriteRule ^scolar/admin/student_list.html scolar/admin/student.php [NC,L]
+
+RewriteRule ^scolar/admin/accept_student.html scolar/admin/accept_student.php [NC,L]
+
+RewriteRule ^scolar/admin/reject_form.html scolar/admin/reject_form.php [NC,L]
+
+RewriteRule ^scolar/admin/student_answer.html scolar/admin/student_answer.php [NC,L]
+
+RewriteRule ^scolar/admin/student_status.html scolar/admin/student_status.php [NC,L]
+
+RewriteRule ^scolar/admin/test_attempt_list.html scolar/admin/student_test_attempt_list.php [NC,L] 
+
+RewriteRule ^scolar/admin/test_all_detail.html scolar/admin/test_detail.php [NC,L]
+
+RewriteRule ^scolar/admin/test_update_status.html scolar/admin/test_status_update.php [NC,L]
+
+RewriteRule ^scolar/admin/package_update.html scolar/admin/update_package.php [NC,L]
+
+RewriteRule ^scolar/admin/test_update.html scolar/admin/update_test.php [NC,L]
+
+RewriteRule ^scolar/admin/test_update_valid.html scolar/admin/update_test_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/question_view.html scolar/admin/view_question.php [NC,L]
+
+RewriteRule ^scolar/admin/new_package.html scolar/admin/new_package.php [NC,L]
+
+RewriteRule ^scolar/admin/student_class_update.html scolar/admin/student_class_update.php [NC,L]
+
+RewriteRule ^scolar/admin/payment_information.html scolar/admin/payment_info.php [NC,L]
+
+RewriteRule ^scolar/admin/exam.html scolar/admin/exam.php [NC,L]
+
+RewriteRule ^scolar/admin/add_exam.html scolar/admin/add_exam.php [NC,L]
+
+RewriteRule ^scolar/admin/add_exam_valid.html scolar/admin/add_exam_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/update_exam.html scolar/admin/update_exam.php [NC,L]
+
+RewriteRule ^scolar/admin/update_exam_valid.html scolar/admin/update_exam_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/delete_exam.html scolar/admin/delete_exam.php [NC,L]
+
+RewriteRule ^scolar/admin/exam_status.html scolar/admin/exam_status.php [NC,L]
+
+RewriteRule ^scolar/admin/panding.html scolar/admin/panding.php [NC,L]
+
+RewriteRule ^scolar/admin/notification.html scolar/admin/notification.php [NC,L]
+
+RewriteRule ^scolar/admin/delete_notification.html scolar/admin/delete_notification.php [NC,L]
+
+RewriteRule ^scolar/admin/notification_status.html scolar/admin/notification_status.php [NC,L]
+
+RewriteRule ^scolar/admin/new_notification.html scolar/admin/new_notification.php [NC,L]
+
+RewriteRule ^scolar/admin/new_notification_valid.html scolar/admin/new_notification_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/manage_class.html scolar/admin/manage_class.php [NC,L]
+
+RewriteRule ^scolar/admin/add_class.html scolar/admin/add_class.php [NC,L]
+
+RewriteRule ^scolar/admin/add_class_valid.html scolar/admin/add_class_valid.php [NC,L]
+
+RewriteRule ^scolar/admin/delete_class.html scolar/admin/delete_class.php [NC,L]
+
+
+
+
+
+
+
+
+
+RewriteRule ^scolar/exam/index.html scolar/exam/index.php [NC,L]
+
+RewriteRule ^scolar/exam/login_valid.html scolar/exam/login_valid.php [NC,L]
+
+RewriteRule ^scolar/exam/test.html scolar/exam/test.php [NC,L]
+
+RewriteRule ^scolar/exam/test_instruction.html scolar/exam/test_instruction.php [NC,L]
+
+RewriteRule ^scolar/exam/test_instruction_valid.html scolar/exam/test_instruction_valid.php [NC,L]
+
+RewriteRule ^scolar/exam/ques_save.html scolar/exam/ques_save.php [NC,L]
+
+RewriteRule ^scolar/exam/reset.html scolar/exam/reset.php [NC,L]
+
+RewriteRule ^scolar/exam/change_question.html scolar/exam/change_question.php [NC,L]
+
+RewriteRule ^scolar/exam/test_submit_valid.html scolar/exam/test_submit_valid.php [NC,L]
+
+RewriteRule ^scolar/exam/analysis.html scolar/exam/test_analysis.php [NC,L]
+
+RewriteRule ^scolar/result.html scolar/result.php [NC,L]
+
+RewriteRule ^scolar/response.html scolar/report_2.php [NC,L]
+
+RewriteRule ^scolar/exam/answer_save.html scolar/exam/answer_save.php [NC,L]
+
+
+RewriteRule ^scolar/demo/index.html scolar/demo/index.php [NC,L]
+
+RewriteRule ^scolar/demo/login_valid.html scolar/demo/login_valid.php [NC,L]
+
+RewriteRule ^scolar/demo/test.html scolar/demo/test.php [NC,L]
+
+RewriteRule ^scolar/demo/test_instruction.html scolar/demo/test_instruction.php [NC,L]
+
+RewriteRule ^scolar/demo/test_instruction_valid.html scolar/demo/test_instruction_valid.php [NC,L]
+
+RewriteRule ^scolar/demo/ques_save.html scolar/demo/ques_save.php [NC,L]
+
+RewriteRule ^scolar/demo/reset.html scolar/demo/reset.php [NC,L]
+
+RewriteRule ^scolar/demo/change_question.html scolar/demo/change_question.php [NC,L]
+
+RewriteRule ^scolar/demo/test_submit_valid.html scolar/demo/test_submit_valid.php [NC,L]
+
+RewriteRule ^scolar/demo/analysis.html scolar/demo/test_analysis.php [NC,L]
+
+RewriteRule ^scolar/demo/answer_save.html scolar/demo/answer_save.php [NC,L]
+
+
+RewriteRule ^faculty/payout/school_plan/processing.html faculty/paytm/PaytmKit/pgRedirect.php [NC,L]
+
+RewriteRule ^faculty/payout/school_plan/response.html faculty/paytm/PaytmKit/pgResponse.php [NC,L]
+
+RewriteRule ^user/payout/student_package/processing.html user/paytm/PaytmKit/pgRedirect.php [NC,L]
+
+RewriteRule ^user/payout/student_package/response.html user/paytm/PaytmKit/pgResponse.php [NC,L]
+
+
+
+

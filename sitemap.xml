@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+
+
+<url>
+  <loc>https://www.mytarget.in/</loc>
+  <lastmod>2020-05-28T11:44:51+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://www.mytarget.in/index.html</loc>
+  <lastmod>2020-05-28T11:44:51+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.mytarget.in/login.html</loc>
+  <lastmod>2020-05-28T15:14:07+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.mytarget.in/register.html</loc>
+  <lastmod>2020-05-28T15:14:07+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.mytarget.in/Terms%20And%20Condition.txt</loc>
+  <lastmod>2020-05-28T08:48:11+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.mytarget.in/Refund%20and%20Cancellation%20Policy.txt</loc>
+  <lastmod>2020-05-28T08:48:02+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.mytarget.in/Privacy%20Policy.txt</loc>
+  <lastmod>2020-05-28T08:47:52+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.mytarget.in/password_reset.html</loc>
+  <lastmod>2020-05-28T15:14:07+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+
+
+</urlset>
